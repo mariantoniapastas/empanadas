@@ -79,7 +79,7 @@ textarea{min-height:60px;resize:vertical}
 <body>
 
 <header>
-  <h1>Cotizador Mariantonia <small style="font-size:11px;opacity:.7;font-family:system-ui">v3</small></h1>
+  <h1>Cotizador Mariantonia <small style="font-size:11px;opacity:.7;font-family:system-ui">v4</small></h1>
   <div class="sub"><span id="estadoPrecios">Cargando precios…</span><span id="pendientes"></span></div>
 </header>
 
@@ -213,7 +213,7 @@ function lsGet(k, def){ try{ const v = localStorage.getItem(k); return v ? JSON.
 function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 
 /* ============ JSONP ============ */
-function jsonp(params, timeout){
+function jsonpRaw(params, timeout){
   return new Promise((resolve, reject) => {
     if (!API_URL || API_URL.indexOf('PEGAR') === 0) return reject(new Error('sin URL'));
     const cb = 'cb_' + Date.now() + '_' + Math.floor(Math.random()*1e6);
@@ -228,11 +228,27 @@ function jsonp(params, timeout){
   });
 }
 
+/* Conexión con la planilla: primero fetch directo; si falla, JSONP */
+async function jsonp(params){
+  if (!API_URL || API_URL.indexOf('PEGAR') === 0) throw new Error('sin URL');
+  const qs = Object.keys(params).map(k => k + '=' + encodeURIComponent(params[k])).join('&');
+  let err1;
+  try{
+    const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 25000);
+    const res = await fetch(API_URL + '?' + qs, {method:'GET', redirect:'follow', signal: ctrl.signal});
+    clearTimeout(t);
+    const txt = await res.text();
+    return JSON.parse(txt);
+  }catch(e){ err1 = e; }
+  try{ return await jsonpRaw(params); }
+  catch(e2){ const e = new Error(e2.message); e.detalle = (err1 && err1.name || '') + '/' + e2.message; throw e; }
+}
+
 function errorTxt(e){
   const m = String(e && e.message);
   if (m === 'sin URL') return 'Falta la URL de la planilla en la app';
   if (m === 'timeout') return 'La planilla tardó en responder, probá de nuevo';
-  return 'Sin conexión con la planilla';
+  return 'Sin conexión con la planilla' + (e && e.detalle ? ' [' + e.detalle + ']' : '');
 }
 
 /* ============ CARGA ============ */
