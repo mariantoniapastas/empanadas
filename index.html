@@ -2,12 +2,14 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#9E2A1F">
 <title>Cotizador Mariantonia</title>
 <style>
 :root{--rojo:#9E2A1F;--rojo2:#7E1F16;--crema:#FBF6EC;--crema2:#F3EAD7;--tinta:#2A2320;--gris:#6B615B;--linea:#E3D8C3;--verde:#3E6B48;--trigo:#C9922E;--ok:#E9F2EB;--mal:#FBE3DE}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body,button,input,select,textarea,label{touch-action:manipulation}
+button{user-select:none;-webkit-user-select:none}
 html,body{margin:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--crema);color:var(--tinta);font-size:15px;padding-bottom:150px}
 header{background:var(--rojo);color:#fff;padding:14px 16px 12px;position:sticky;top:0;z-index:20}
@@ -17,7 +19,7 @@ main{max-width:640px;margin:0 auto;padding:12px 16px}
 section{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:14px;margin-bottom:12px}
 h2{font-size:13px;text-transform:uppercase;letter-spacing:.12em;color:var(--trigo);margin:0 0 10px}
 label{display:block;font-size:12px;color:var(--gris);margin:8px 0 4px}
-input,select,textarea{width:100%;font:inherit;padding:10px 12px;border:1px solid var(--linea);border-radius:10px;background:#fff;color:var(--tinta)}
+input,select,textarea{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1px solid var(--linea);border-radius:10px;background:#fff;color:var(--tinta)}
 textarea{min-height:60px;resize:vertical}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .prod{border-top:1px solid var(--linea);padding:12px 0}
@@ -31,14 +33,14 @@ textarea{min-height:60px;resize:vertical}
 .stepper input{width:52px;border:0;text-align:center;border-radius:0;padding:0;height:40px;font-weight:600}
 .prod-price{display:flex;align-items:center;justify-content:space-between;margin-top:8px;gap:8px;font-size:13px}
 .prod-price .pu{display:flex;align-items:center;gap:6px}
-.prod-price input{width:110px;padding:6px 8px;text-align:right}
 .prod-price .line{font-weight:700}
 .inval input{border-color:var(--rojo);background:var(--mal)}
 .warn{font-size:12px;color:var(--rojo);margin-top:4px}
 .niveles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .niveles button{border:1.5px solid var(--linea);background:#fff;border-radius:10px;padding:9px 4px;font:inherit;font-size:12.5px;font-weight:600;color:var(--tinta)}
 .niveles button.on{background:var(--rojo);border-color:var(--rojo);color:#fff}
-.niveles button:disabled{opacity:.4}
+.niveles button.lock{opacity:.55;border-style:dashed}
+.niveles button small{display:block;font-size:10px;font-weight:500;opacity:.85;margin-top:1px}
 .niveles button.piso{border-style:dashed}
 .hint{font-size:12.5px;background:var(--crema);border-radius:10px;padding:9px 11px;margin-top:10px;color:var(--tinta)}
 .hint.ok{background:var(--ok)}
@@ -77,7 +79,7 @@ textarea{min-height:60px;resize:vertical}
 <body>
 
 <header>
-  <h1>Cotizador Mariantonia</h1>
+  <h1>Cotizador Mariantonia <small style="font-size:11px;opacity:.7;font-family:system-ui">v3</small></h1>
   <div class="sub"><span id="estadoPrecios">Cargando precios…</span><span id="pendientes"></span></div>
 </header>
 
@@ -112,7 +114,7 @@ textarea{min-height:60px;resize:vertical}
     <div class="niveles" id="niveles">
       <button data-n="lista">Lista</button>
       <button data-n="fijo">Cliente fijo</button>
-      <button data-n="volumen">Volumen</button>
+      <button data-n="volumen">Volumen<small id="volDesde"></small></button>
       <button data-n="piso" class="piso">Piso 🔒</button>
     </div>
     <label class="check" id="fijoBox" style="display:none"><input type="checkbox" id="fijoOk"><span>El cliente se compromete a un <b>pedido todas las semanas</b> y paga <b>contado o transferencia contra entrega</b>.</span></label>
@@ -175,7 +177,7 @@ textarea{min-height:60px;resize:vertical}
 <script>
 /* ============ CONFIGURACIÓN ============ */
 // Pegá acá la URL de la implementación de Apps Script (termina en /exec)
-const API_URL = 'PEGAR_AQUI_URL_DE_APPS_SCRIPT';
+const API_URL = 'https://script.google.com/macros/s/AKfycbzcsQWDj-rgmP41iIrnlz4MWeMk8gAzpzozj5Z4GfcT6nfHFl8HIB37LDY1DrDVesC13A/exec';
 
 /* Precios de respaldo (se usan solo si nunca se pudo conectar con la planilla) */
 const RESPALDO = {
@@ -202,7 +204,7 @@ const NIVEL_TXT = {lista:'Precio de lista',fijo:'Precio cliente fijo',volumen:'P
 
 /* ============ ESTADO ============ */
 let DATA = null;
-let S = {qty:{}, custom:{}, nivel:'lista', pin:null, tipo:'Cotización'};
+let S = {qty:{}, nivel:'lista', pin:null, tipo:'Cotización'};
 const $ = id => document.getElementById(id);
 const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
 
@@ -216,7 +218,7 @@ function jsonp(params, timeout){
     if (!API_URL || API_URL.indexOf('PEGAR') === 0) return reject(new Error('sin URL'));
     const cb = 'cb_' + Date.now() + '_' + Math.floor(Math.random()*1e6);
     const s = document.createElement('script');
-    const t = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, timeout || 15000);
+    const t = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, timeout || 25000);
     function cleanup(){ clearTimeout(t); delete window[cb]; s.remove(); }
     window[cb] = data => { cleanup(); resolve(data); };
     const qs = Object.keys(params).map(k => k + '=' + encodeURIComponent(params[k])).join('&');
@@ -224,6 +226,13 @@ function jsonp(params, timeout){
     s.onerror = () => { cleanup(); reject(new Error('red')); };
     document.body.appendChild(s);
   });
+}
+
+function errorTxt(e){
+  const m = String(e && e.message);
+  if (m === 'sin URL') return 'Falta la URL de la planilla en la app';
+  if (m === 'timeout') return 'La planilla tardó en responder, probá de nuevo';
+  return 'Sin conexión con la planilla';
 }
 
 /* ============ CARGA ============ */
@@ -236,7 +245,7 @@ async function cargar(){
     $('estadoPrecios').textContent = 'Precios actualizados' + (r.config.actualizado ? ' · ' + r.config.actualizado : '');
   }catch(e){
     DATA = cache || RESPALDO;
-    $('estadoPrecios').textContent = cache ? 'Sin conexión · precios guardados' : 'Sin conexión · precios de respaldo';
+    $('estadoPrecios').textContent = errorTxt(e) + (cache ? ' · precios guardados' : ' · precios de respaldo');
   }
   armar();
   enviarPendientes();
@@ -259,7 +268,7 @@ function armar(){
         </div>
       </div>
       <div class="prod-price">
-        <div class="pu">Precio x ${p.unidad.toLowerCase()} <input class="pr" data-id="${p.id}" inputmode="numeric"></div>
+        <div class="pu">Precio x ${p.unidad.toLowerCase()}: <b class="pr" id="pu_${p.id}"></b></div>
         <div class="line" id="l_${p.id}">$0</div>
       </div>
       <div class="warn" id="w_${p.id}"></div>
@@ -298,15 +307,13 @@ function calcular(){
   let lista = 0, sub = 0, invalid = false, lineas = [];
   DATA.productos.forEach(p => {
     const q = S.qty[p.id] || 0;
-    const pu = S.custom[p.id] != null ? S.custom[p.id] : precioNivel(p);
-    const bad = q > 0 && pu < minPermitido(p);
-    if (bad) invalid = true;
+    const pu = precioNivel(p);
     if (q > 0){ lista += q * p.lista; sub += q * pu; lineas.push({p, q, pu}); }
   });
   const cfg = DATA.config;
   let envio = 0;
   if (sub > 0 && sub < cfg.envioGratisDesde && !$('envioBonif').checked) envio = cfg.envioCosto;
-  const usaPiso = S.nivel === 'piso' || lineas.some(l => l.pu < precioNivel(l.p));
+  const usaPiso = S.nivel === 'piso';
   return {lista, sub, desc: lista - sub, envio, total: sub + envio, invalid, lineas, usaPiso};
 }
 
@@ -320,22 +327,19 @@ function render(){
 
   document.querySelectorAll('#niveles button').forEach(b => {
     b.classList.toggle('on', b.dataset.n === S.nivel);
-    if (b.dataset.n === 'volumen') b.disabled = !volOk;
+    if (b.dataset.n === 'volumen') b.classList.toggle('lock', !volOk);
     if (b.dataset.n === 'piso') b.textContent = S.pin ? 'Piso ✓' : 'Piso 🔒';
   });
   $('fijoBox').style.display = S.nivel === 'fijo' ? 'flex' : 'none';
+  $('volDesde').textContent = 'desde ' + fmt(cfg.volumenDesde);
 
   DATA.productos.forEach(p => {
     const q = S.qty[p.id] || 0;
-    const pu = S.custom[p.id] != null ? S.custom[p.id] : precioNivel(p);
+    const pu = precioNivel(p);
     const el = $('p_' + p.id);
-    el.querySelector('.qty').value = q;
-    const pr = el.querySelector('.pr');
-    if (document.activeElement !== pr) pr.value = pu;
+    if (document.activeElement !== el.querySelector('.qty')) el.querySelector('.qty').value = q;
+    $('pu_' + p.id).textContent = fmt(pu);
     $('l_' + p.id).textContent = fmt(q * pu);
-    const bad = q > 0 && pu < minPermitido(p);
-    el.classList.toggle('inval', bad);
-    $('w_' + p.id).textContent = bad ? (S.pin ? `Nunca por debajo del piso (${fmt(p.piso)})` : `Mínimo para este nivel: ${fmt(minPermitido(p))}. Para bajar más, pedí el piso.`) : '';
   });
 
   const c = calcular();
@@ -375,21 +379,20 @@ document.addEventListener('click', e => {
   const b = e.target.closest('.stepper button');
   if (b){ const id = b.dataset.id; S.qty[id] = Math.max(0, (S.qty[id]||0) + Number(b.dataset.d)); render(); }
   const nb = e.target.closest('#niveles button');
-  if (nb && !nb.disabled){
+  if (nb){
     const n = nb.dataset.n;
+    if (n === 'volumen'){
+      let la = 0; DATA.productos.forEach(p => la += (S.qty[p.id]||0) * p.lista);
+      if (la < DATA.config.volumenDesde){ toast(`Volumen se habilita desde ${fmt(DATA.config.volumenDesde)} a precio de lista. Faltan ${fmt(DATA.config.volumenDesde - la)}.`); return; }
+    }
     if (n === 'piso' && !S.pin){ $('modalPiso').classList.add('show'); setTimeout(()=>$('pinInput').focus(), 100); return; }
-    S.nivel = n; S.custom = {}; render();
+    S.nivel = n; render();
   }
   const tb = e.target.closest('#tipos button');
   if (tb){ S.tipo = tb.dataset.t; document.querySelectorAll('#tipos button').forEach(x => x.classList.toggle('on', x === tb)); $('btnGuardar').textContent = 'Guardar ' + S.tipo.toLowerCase(); }
 });
 document.addEventListener('input', e => {
   if (e.target.classList.contains('qty')){ S.qty[e.target.dataset.id] = Math.max(0, parseInt(e.target.value.replace(/\D/g,'')) || 0); render(); }
-  if (e.target.classList.contains('pr')){
-    const v = parseInt(e.target.value.replace(/\D/g,''));
-    if (isNaN(v)) delete S.custom[e.target.dataset.id]; else S.custom[e.target.dataset.id] = v;
-    render();
-  }
 });
 ['fijoOk','envioBonif','regalo','rubro'].forEach(id => $(id).addEventListener('change', render));
 $('vendedor').addEventListener('change', () => lsSet('ma_vendedor', $('vendedor').value));
@@ -400,9 +403,9 @@ $('btnPin').onclick = async () => {
   $('btnPin').disabled = true;
   try{
     const r = await jsonp({action:'pin', pin});
-    if (r.ok){ S.pin = pin; S.nivel = 'piso'; S.custom = {}; $('modalPiso').classList.remove('show'); toast('Precio piso habilitado'); render(); }
+    if (r.ok){ S.pin = pin; S.nivel = 'piso'; $('modalPiso').classList.remove('show'); toast('Precio piso habilitado'); render(); }
     else toast('Clave incorrecta');
-  }catch(e){ toast('Hace falta conexión para validar la clave'); }
+  }catch(e){ toast(errorTxt(e)); }
   $('btnPin').disabled = false; $('pinInput').value = '';
 };
 $('btnPedirAut').onclick = () => {
@@ -451,7 +454,7 @@ $('btnGuardar').onclick = async () => {
   try{
     const r = await jsonp({action:'registrar', data: JSON.stringify(reg)});
     if (!r.ok) throw new Error(r.error || 'error');
-    toast(S.tipo + ' guardado ✓');
+    toast('Guardado en la planilla ✓');
   }catch(e){
     if (String(e.message).includes('PIN')){ toast('Clave de piso inválida'); $('btnGuardar').disabled = false; return; }
     const q = lsGet('ma_pendientes', []); q.push(reg); lsSet('ma_pendientes', q);
@@ -470,7 +473,7 @@ function mostrarPendientes(){ const n = lsGet('ma_pendientes', []).length; $('pe
 window.addEventListener('online', enviarPendientes);
 
 $('btnNuevo').onclick = () => {
-  S = {qty:{}, custom:{}, nivel:'lista', pin:null, tipo:'Cotización'};
+  S = {qty:{}, nivel:'lista', pin:null, tipo:'Cotización'};
   ['cliente','telefono','direccion','notas'].forEach(id => $(id).value = '');
   $('rubro').value = ''; ['fijoOk','envioBonif','regalo'].forEach(id => $(id).checked = false);
   document.querySelectorAll('#tipos button').forEach((x,i) => x.classList.toggle('on', i === 0)); $('btnGuardar').textContent = 'Guardar cotización';
