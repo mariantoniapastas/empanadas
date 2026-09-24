@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#9E2A1F">
+<title>Cotizador Mariantonia</title>
+<style>
+:root{--rojo:#9E2A1F;--rojo2:#7E1F16;--crema:#FBF6EC;--crema2:#F3EAD7;--tinta:#2A2320;--gris:#6B615B;--linea:#E3D8C3;--verde:#3E6B48;--trigo:#C9922E;--ok:#E9F2EB;--mal:#FBE3DE}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--crema);color:var(--tinta);font-size:15px;padding-bottom:150px}
+header{background:var(--rojo);color:#fff;padding:14px 16px 12px;position:sticky;top:0;z-index:20}
+header h1{margin:0;font-size:18px;font-family:Georgia,serif;letter-spacing:.3px}
+header .sub{font-size:12px;opacity:.85;margin-top:2px;display:flex;justify-content:space-between;gap:8px}
+main{max-width:640px;margin:0 auto;padding:12px 16px}
+section{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:14px;margin-bottom:12px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:.12em;color:var(--trigo);margin:0 0 10px}
+label{display:block;font-size:12px;color:var(--gris);margin:8px 0 4px}
+input,select,textarea{width:100%;font:inherit;padding:10px 12px;border:1px solid var(--linea);border-radius:10px;background:#fff;color:var(--tinta)}
+textarea{min-height:60px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.prod{border-top:1px solid var(--linea);padding:12px 0}
+.prod:first-of-type{border-top:none;padding-top:0}
+.prod-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.prod-name{font-weight:600}
+.prod-unit{font-size:12px;color:var(--gris)}
+.prod-arg{font-size:12px;color:var(--gris);margin-top:2px}
+.stepper{display:flex;align-items:center;border:1px solid var(--linea);border-radius:10px;overflow:hidden;flex-shrink:0}
+.stepper button{width:40px;height:40px;border:0;background:var(--crema2);font-size:20px;color:var(--rojo);font-weight:700}
+.stepper input{width:52px;border:0;text-align:center;border-radius:0;padding:0;height:40px;font-weight:600}
+.prod-price{display:flex;align-items:center;justify-content:space-between;margin-top:8px;gap:8px;font-size:13px}
+.prod-price .pu{display:flex;align-items:center;gap:6px}
+.prod-price input{width:110px;padding:6px 8px;text-align:right}
+.prod-price .line{font-weight:700}
+.inval input{border-color:var(--rojo);background:var(--mal)}
+.warn{font-size:12px;color:var(--rojo);margin-top:4px}
+.niveles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.niveles button{border:1.5px solid var(--linea);background:#fff;border-radius:10px;padding:9px 4px;font:inherit;font-size:12.5px;font-weight:600;color:var(--tinta)}
+.niveles button.on{background:var(--rojo);border-color:var(--rojo);color:#fff}
+.niveles button:disabled{opacity:.4}
+.niveles button.piso{border-style:dashed}
+.hint{font-size:12.5px;background:var(--crema);border-radius:10px;padding:9px 11px;margin-top:10px;color:var(--tinta)}
+.hint.ok{background:var(--ok)}
+.hint.mal{background:var(--mal)}
+.check{display:flex;gap:10px;align-items:flex-start;margin-top:10px;font-size:13.5px}
+.check input{width:20px;height:20px;flex-shrink:0;margin-top:1px}
+.tot{display:flex;justify-content:space-between;padding:4px 0;font-size:14px}
+.tot.big{font-size:19px;font-weight:700;border-top:1px solid var(--linea);margin-top:6px;padding-top:10px}
+.tot .neg{color:var(--verde)}
+.sug{font-size:13px;background:#FFF7E6;border:1px solid #F1DDB0;border-radius:10px;padding:9px 11px;margin-top:10px}
+.bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--linea);padding:10px 16px calc(10px + env(safe-area-inset-bottom));z-index:30;box-shadow:0 -4px 16px rgba(0,0,0,.06)}
+.bar-in{max-width:640px;margin:0 auto}
+.bar-total{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.bar-total b{font-size:21px}
+.bar-total span{font-size:12px;color:var(--gris)}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn{border:0;border-radius:12px;padding:13px 10px;font:inherit;font-weight:700;font-size:14.5px}
+.btn.pri{background:var(--rojo);color:#fff}
+.btn.sec{background:var(--crema2);color:var(--tinta)}
+.btn.wa{background:#1F8B4C;color:#fff}
+.btn:disabled{opacity:.45}
+.tipos{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tipos button{border:1.5px solid var(--linea);background:#fff;border-radius:10px;padding:10px 2px;font:inherit;font-size:12.5px;font-weight:600}
+.tipos button.on{background:var(--tinta);color:#fff;border-color:var(--tinta)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:50}
+.modal.show{display:flex}
+.sheet{background:#fff;width:100%;max-width:640px;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+.sheet h3{margin:0 0 6px;font-family:Georgia,serif;color:var(--rojo)}
+.sheet p{font-size:13.5px;color:var(--gris);margin:0 0 10px}
+.toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:var(--tinta);color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;z-index:60;opacity:0;transition:.25s;pointer-events:none;max-width:90%;text-align:center}
+.toast.show{opacity:1}
+.pend{font-size:12px;background:#fff3;padding:2px 8px;border-radius:8px}
+.small{font-size:12px;color:var(--gris)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Cotizador Mariantonia</h1>
+  <div class="sub"><span id="estadoPrecios">Cargando precios…</span><span id="pendientes"></span></div>
+</header>
+
+<main>
+  <section>
+    <h2>Vendedor y cliente</h2>
+    <label>Vendedor</label>
+    <select id="vendedor"></select>
+    <label>Cliente / local *</label>
+    <input id="cliente" placeholder="Ej: Pizzería Don Pepe">
+    <div class="row">
+      <div><label>Rubro</label>
+        <select id="rubro">
+          <option value="">Elegir…</option>
+          <option>Casa de empanadas</option><option>Pizzería</option><option>Rotisería / casa de comidas</option>
+          <option>Fábrica de pastas / almacén</option><option>Catering / salón</option><option>Bodegón / restaurante</option><option>Otro</option>
+        </select></div>
+      <div><label>WhatsApp (sin 0 ni 15)</label><input id="telefono" inputmode="tel" placeholder="1122334455"></div>
+    </div>
+    <label>Dirección</label>
+    <input id="direccion" placeholder="Calle y número, localidad">
+    <div id="sugerencia" class="sug" style="display:none"></div>
+  </section>
+
+  <section>
+    <h2>Productos</h2>
+    <div id="productos"></div>
+  </section>
+
+  <section>
+    <h2>Nivel de precio</h2>
+    <div class="niveles" id="niveles">
+      <button data-n="lista">Lista</button>
+      <button data-n="fijo">Cliente fijo</button>
+      <button data-n="volumen">Volumen</button>
+      <button data-n="piso" class="piso">Piso 🔒</button>
+    </div>
+    <label class="check" id="fijoBox" style="display:none"><input type="checkbox" id="fijoOk"><span>El cliente se compromete a un <b>pedido todas las semanas</b> y paga <b>contado o transferencia contra entrega</b>.</span></label>
+    <div id="nivelHint" class="hint"></div>
+  </section>
+
+  <section>
+    <h2>Herramientas para cerrar</h2>
+    <label class="check"><input type="checkbox" id="envioBonif"><span>Bonificar el envío (solo primer pedido)</span></label>
+    <label class="check" id="regaloBox"><input type="checkbox" id="regalo"><span id="regaloTxt">Regalar 1 kg de ñoquis (solo primer pedido)</span></label>
+    <div id="nudges"></div>
+  </section>
+
+  <section>
+    <h2>Resumen</h2>
+    <div class="tot"><span>Subtotal a precio de lista</span><span id="tLista">$0</span></div>
+    <div class="tot"><span>Descuento</span><span id="tDesc" class="neg">$0</span></div>
+    <div class="tot"><span>Envío</span><span id="tEnvio">$0</span></div>
+    <div class="tot big"><span>Total</span><span id="tTotal">$0</span></div>
+    <label>Entrega</label>
+    <select id="entrega"></select>
+    <label>Notas</label>
+    <textarea id="notas" placeholder="Ej: prefiere entrega a la mañana, compra hoy a otro proveedor…"></textarea>
+  </section>
+
+  <section>
+    <h2>Guardar como</h2>
+    <div class="tipos" id="tipos">
+      <button data-t="Cotización" class="on">Cotización</button>
+      <button data-t="Pedido">Pedido</button>
+      <button data-t="Muestra">Muestra</button>
+      <button data-t="Visita">Visita</button>
+    </div>
+    <p class="small" style="margin:10px 0 0">Todo lo que se guarda llega a la planilla de la fábrica. Sin señal, queda guardado en el teléfono y se envía solo después.</p>
+    <button class="btn sec" style="width:100%;margin-top:12px" id="btnNuevo">Nueva cotización</button>
+  </section>
+</main>
+
+<div class="bar"><div class="bar-in">
+  <div class="bar-total"><span id="barNivel">Precio de lista</span><b id="barTotal">$0</b></div>
+  <div class="btns">
+    <button class="btn wa" id="btnWA">Enviar por WhatsApp</button>
+    <button class="btn pri" id="btnGuardar">Guardar cotización</button>
+  </div>
+</div></div>
+
+<div class="modal" id="modalPiso"><div class="sheet">
+  <h3>Precio piso</h3>
+  <p>Solo se usa para cerrar un cliente grande o frente a una competencia comprobada. Pedí la clave a la fábrica.</p>
+  <input id="pinInput" inputmode="numeric" placeholder="Clave de autorización" autocomplete="off">
+  <div class="btns" style="margin-top:12px">
+    <button class="btn sec" id="btnPedirAut">Pedir por WhatsApp</button>
+    <button class="btn pri" id="btnPin">Habilitar</button>
+  </div>
+  <button class="btn sec" style="width:100%;margin-top:8px;background:none" id="btnCerrarPiso">Cancelar</button>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ CONFIGURACIÓN ============ */
+// Pegá acá la URL de la implementación de Apps Script (termina en /exec)
+const API_URL = 'PEGAR_AQUI_URL_DE_APPS_SCRIPT';
+
+/* Precios de respaldo (se usan solo si nunca se pudo conectar con la planilla) */
+const RESPALDO = {
+  productos: [
+    {id:'ROT',nombre:'Tapa rotisera',unidad:'Docena',lista:2300,fijo:2150,volumen:2000,piso:1800,argumento:'No se revienta en el horno. ~600 g la docena.'},
+    {id:'CRI',nombre:'Tapa criolla',unidad:'Docena',lista:2300,fijo:2150,volumen:2000,piso:1650,argumento:'Sabor clásico de grasa. Frita rinde muchísimo.'},
+    {id:'COP',nombre:'Tapa copetín',unidad:'Pack 24',lista:2700,fijo:2550,volumen:2400,piso:2200,argumento:'Ideal para eventos, catering y bandejas.'},
+    {id:'PAS',nombre:'Tapa de pascualina',unidad:'Pack 2',lista:2400,fijo:2250,volumen:2100,piso:1900,argumento:'32 cm. Una fábrica de pastas compra 200 por semana.'},
+    {id:'NOQ',nombre:'Ñoquis',unidad:'Kg',lista:7200,fijo:6700,volumen:6300,piso:5500,argumento:'1 kg = 3 platos. Ideal para el 29.'},
+    {id:'FID',nombre:'Fideos',unidad:'Kg',lista:4900,fijo:4500,volumen:4200,piso:3800,argumento:'1 kg = 5 platos. Menos de $1.000 por plato.'}
+  ],
+  config:{volumenDesde:45000,envioCosto:2500,envioGratisDesde:15000,whatsappAutoriza:'',vendedores:['Vendedor 1','Vendedor 2'],regaloMaxKg:1,actualizado:'respaldo'}
+};
+
+const SUGERENCIAS = {
+  'Casa de empanadas':'Arrancá con <b>rotisera y criolla</b>. Sumá <b>copetín</b> para eventos y <b>pascualinas</b> si hacen tartas.',
+  'Pizzería':'Arrancá con <b>rotisera</b>. Preguntá: <i>"¿Hacen algo el 29?"</i> → <b>ñoquis</b>. Si tienen pastas → <b>fideos</b>.',
+  'Rotisería / casa de comidas':'Ofrecé <b>rotisera + pascualinas</b>. Sumá <b>fideos y ñoquis</b> para el menú del día.',
+  'Fábrica de pastas / almacén':'Ofrecé <b>pascualinas y tapas</b> para reventa. Contá el caso de la fábrica que compra 200 por semana.',
+  'Catering / salón':'Ofrecé <b>copetín</b> y <b>pascualinas</b> para tartas.',
+  'Bodegón / restaurante':'Arrancá con <b>ñoquis y fideos</b> (plato de fideos: menos de $1.000 de pasta). Si hacen empanadas de entrada, sumá tapas.'
+};
+const NIVEL_TXT = {lista:'Precio de lista',fijo:'Precio cliente fijo',volumen:'Precio por volumen',piso:'Precio piso (autorizado)'};
+
+/* ============ ESTADO ============ */
+let DATA = null;
+let S = {qty:{}, custom:{}, nivel:'lista', pin:null, tipo:'Cotización'};
+const $ = id => document.getElementById(id);
+const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
+
+/* ============ STORAGE SEGURO ============ */
+function lsGet(k, def){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; }catch(e){ return def; } }
+function lsSet(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+
+/* ============ JSONP ============ */
+function jsonp(params, timeout){
+  return new Promise((resolve, reject) => {
+    if (!API_URL || API_URL.indexOf('PEGAR') === 0) return reject(new Error('sin URL'));
+    const cb = 'cb_' + Date.now() + '_' + Math.floor(Math.random()*1e6);
+    const s = document.createElement('script');
+    const t = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, timeout || 15000);
+    function cleanup(){ clearTimeout(t); delete window[cb]; s.remove(); }
+    window[cb] = data => { cleanup(); resolve(data); };
+    const qs = Object.keys(params).map(k => k + '=' + encodeURIComponent(params[k])).join('&');
+    s.src = API_URL + '?' + qs + '&callback=' + cb;
+    s.onerror = () => { cleanup(); reject(new Error('red')); };
+    document.body.appendChild(s);
+  });
+}
+
+/* ============ CARGA ============ */
+async function cargar(){
+  const cache = lsGet('ma_precios', null);
+  try{
+    const r = await jsonp({action:'precios'});
+    if (!r.ok) throw new Error(r.error);
+    DATA = r; lsSet('ma_precios', r);
+    $('estadoPrecios').textContent = 'Precios actualizados' + (r.config.actualizado ? ' · ' + r.config.actualizado : '');
+  }catch(e){
+    DATA = cache || RESPALDO;
+    $('estadoPrecios').textContent = cache ? 'Sin conexión · precios guardados' : 'Sin conexión · precios de respaldo';
+  }
+  armar();
+  enviarPendientes();
+}
+
+function armar(){
+  const vs = DATA.config.vendedores.length ? DATA.config.vendedores : ['Vendedor'];
+  $('vendedor').innerHTML = vs.map(v => `<option>${v}</option>`).join('');
+  const vg = lsGet('ma_vendedor', '');
+  if (vg && vs.includes(vg)) $('vendedor').value = vg;
+
+  $('productos').innerHTML = DATA.productos.map(p => `
+    <div class="prod" id="p_${p.id}">
+      <div class="prod-top">
+        <div><div class="prod-name">${p.nombre}</div><div class="prod-unit">${p.unidad}</div><div class="prod-arg">${p.argumento||''}</div></div>
+        <div class="stepper">
+          <button data-id="${p.id}" data-d="-1">−</button>
+          <input data-id="${p.id}" class="qty" inputmode="numeric" value="0">
+          <button data-id="${p.id}" data-d="1">+</button>
+        </div>
+      </div>
+      <div class="prod-price">
+        <div class="pu">Precio x ${p.unidad.toLowerCase()} <input class="pr" data-id="${p.id}" inputmode="numeric"></div>
+        <div class="line" id="l_${p.id}">$0</div>
+      </div>
+      <div class="warn" id="w_${p.id}"></div>
+    </div>`).join('');
+
+  const noq = DATA.productos.find(p => p.id === 'NOQ');
+  const maxKg = DATA.config.regaloMaxKg || 0;
+  $('regaloBox').style.display = (noq && maxKg > 0) ? 'flex' : 'none';
+  $('regaloTxt').textContent = `Regalar ${maxKg} kg de ñoquis (solo primer pedido)`;
+
+  armarEntregas();
+  render();
+}
+
+/* ============ ENTREGAS (producción mié y sáb; cierre 2 días antes a las 18 h) ============ */
+function armarEntregas(){
+  const dias = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+  const now = new Date(); const opts = [];
+  for (let i = 0; i < 21 && opts.length < 4; i++){
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+    if (d.getDay() !== 3 && d.getDay() !== 6) continue;
+    const cierre = new Date(d.getFullYear(), d.getMonth(), d.getDate() - 2, 18, 0);
+    if (now >= cierre) continue;
+    const txt = `${dias[d.getDay()]} ${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+    opts.push(`<option>${txt}</option>`);
+  }
+  $('entrega').innerHTML = '<option value="">A coordinar</option>' + opts.join('');
+  if (opts.length) $('entrega').selectedIndex = 1;
+}
+
+/* ============ CÁLCULO ============ */
+function precioNivel(p, n){ return p[n || S.nivel] || p.lista; }
+function minPermitido(p){ return S.pin ? p.piso : precioNivel(p); }
+
+function calcular(){
+  let lista = 0, sub = 0, invalid = false, lineas = [];
+  DATA.productos.forEach(p => {
+    const q = S.qty[p.id] || 0;
+    const pu = S.custom[p.id] != null ? S.custom[p.id] : precioNivel(p);
+    const bad = q > 0 && pu < minPermitido(p);
+    if (bad) invalid = true;
+    if (q > 0){ lista += q * p.lista; sub += q * pu; lineas.push({p, q, pu}); }
+  });
+  const cfg = DATA.config;
+  let envio = 0;
+  if (sub > 0 && sub < cfg.envioGratisDesde && !$('envioBonif').checked) envio = cfg.envioCosto;
+  const usaPiso = S.nivel === 'piso' || lineas.some(l => l.pu < precioNivel(l.p));
+  return {lista, sub, desc: lista - sub, envio, total: sub + envio, invalid, lineas, usaPiso};
+}
+
+/* ============ RENDER ============ */
+function render(){
+  const cfg = DATA.config;
+  // lista actual para habilitar volumen
+  let listaAct = 0; DATA.productos.forEach(p => listaAct += (S.qty[p.id]||0) * p.lista);
+  const volOk = listaAct >= cfg.volumenDesde;
+  if (S.nivel === 'volumen' && !volOk){ S.nivel = 'lista'; toast('El pedido ya no alcanza para precio Volumen'); }
+
+  document.querySelectorAll('#niveles button').forEach(b => {
+    b.classList.toggle('on', b.dataset.n === S.nivel);
+    if (b.dataset.n === 'volumen') b.disabled = !volOk;
+    if (b.dataset.n === 'piso') b.textContent = S.pin ? 'Piso ✓' : 'Piso 🔒';
+  });
+  $('fijoBox').style.display = S.nivel === 'fijo' ? 'flex' : 'none';
+
+  DATA.productos.forEach(p => {
+    const q = S.qty[p.id] || 0;
+    const pu = S.custom[p.id] != null ? S.custom[p.id] : precioNivel(p);
+    const el = $('p_' + p.id);
+    el.querySelector('.qty').value = q;
+    const pr = el.querySelector('.pr');
+    if (document.activeElement !== pr) pr.value = pu;
+    $('l_' + p.id).textContent = fmt(q * pu);
+    const bad = q > 0 && pu < minPermitido(p);
+    el.classList.toggle('inval', bad);
+    $('w_' + p.id).textContent = bad ? (S.pin ? `Nunca por debajo del piso (${fmt(p.piso)})` : `Mínimo para este nivel: ${fmt(minPermitido(p))}. Para bajar más, pedí el piso.`) : '';
+  });
+
+  const c = calcular();
+  $('tLista').textContent = fmt(c.lista);
+  $('tDesc').textContent = c.desc > 0 ? '−' + fmt(c.desc) : '$0';
+  $('tEnvio').textContent = c.sub === 0 ? '$0' : (c.envio ? fmt(c.envio) : 'Sin cargo');
+  $('tTotal').textContent = fmt(c.total);
+  $('barTotal').textContent = fmt(c.total);
+  $('barNivel').textContent = NIVEL_TXT[S.nivel];
+
+  // hint de nivel
+  const h = $('nivelHint');
+  if (S.nivel === 'lista'){ h.className = 'hint'; h.innerHTML = 'Siempre arrancá con el precio de lista. Bajá solo a cambio de algo: pedido fijo, más cantidad o pago contado.'; }
+  if (S.nivel === 'fijo'){ const ok = $('fijoOk').checked; h.className = 'hint ' + (ok ? 'ok' : 'mal'); h.innerHTML = ok ? 'Precio cliente fijo habilitado. Decíselo: <i>"Te hago precio de cliente fijo porque me comprometés el pedido."</i>' : 'Tildá el compromiso del cliente para usar este precio.'; }
+  if (S.nivel === 'volumen'){ h.className = 'hint ok'; h.innerHTML = 'Precio por volumen: el pedido supera ' + fmt(cfg.volumenDesde) + ' a precio de lista.'; }
+  if (S.nivel === 'piso'){ h.className = 'hint mal'; h.innerHTML = '<b>Precio piso autorizado.</b> Usalo solo para cerrar. Nunca por debajo.'; }
+
+  // empujones de venta
+  const n = [];
+  if (c.sub > 0 && c.sub < cfg.envioGratisDesde && !$('envioBonif').checked) n.push(`Faltan <b>${fmt(cfg.envioGratisDesde - c.sub)}</b> para envío sin cargo. Ofrecé sumar un producto.`);
+  if (listaAct > 0 && !volOk) n.push(`Faltan <b>${fmt(cfg.volumenDesde - listaAct)}</b> (a precio de lista) para habilitar el precio Volumen.`);
+  const tieneTapas = ['ROT','CRI','COP','PAS'].some(id => (S.qty[id]||0) > 0);
+  const tienePasta = ['NOQ','FID'].some(id => (S.qty[id]||0) > 0);
+  if (tieneTapas && !tienePasta) n.push('¿Le ofreciste <b>ñoquis o fideos</b>? Preguntá: <i>"¿Y pastas tenés en la carta?"</i>');
+  $('nudges').innerHTML = n.map(t => `<div class="hint">${t}</div>`).join('');
+
+  const r = $('rubro').value;
+  $('sugerencia').style.display = SUGERENCIAS[r] ? 'block' : 'none';
+  $('sugerencia').innerHTML = SUGERENCIAS[r] ? '<b>Sugerencia:</b> ' + SUGERENCIAS[r] : '';
+
+  const nivelInvalido = S.nivel === 'fijo' && !$('fijoOk').checked;
+  $('btnWA').disabled = c.invalid || nivelInvalido || c.sub === 0;
+}
+
+/* ============ EVENTOS ============ */
+document.addEventListener('click', e => {
+  const b = e.target.closest('.stepper button');
+  if (b){ const id = b.dataset.id; S.qty[id] = Math.max(0, (S.qty[id]||0) + Number(b.dataset.d)); render(); }
+  const nb = e.target.closest('#niveles button');
+  if (nb && !nb.disabled){
+    const n = nb.dataset.n;
+    if (n === 'piso' && !S.pin){ $('modalPiso').classList.add('show'); setTimeout(()=>$('pinInput').focus(), 100); return; }
+    S.nivel = n; S.custom = {}; render();
+  }
+  const tb = e.target.closest('#tipos button');
+  if (tb){ S.tipo = tb.dataset.t; document.querySelectorAll('#tipos button').forEach(x => x.classList.toggle('on', x === tb)); $('btnGuardar').textContent = 'Guardar ' + S.tipo.toLowerCase(); }
+});
+document.addEventListener('input', e => {
+  if (e.target.classList.contains('qty')){ S.qty[e.target.dataset.id] = Math.max(0, parseInt(e.target.value.replace(/\D/g,'')) || 0); render(); }
+  if (e.target.classList.contains('pr')){
+    const v = parseInt(e.target.value.replace(/\D/g,''));
+    if (isNaN(v)) delete S.custom[e.target.dataset.id]; else S.custom[e.target.dataset.id] = v;
+    render();
+  }
+});
+['fijoOk','envioBonif','regalo','rubro'].forEach(id => $(id).addEventListener('change', render));
+$('vendedor').addEventListener('change', () => lsSet('ma_vendedor', $('vendedor').value));
+
+$('btnCerrarPiso').onclick = () => $('modalPiso').classList.remove('show');
+$('btnPin').onclick = async () => {
+  const pin = $('pinInput').value.trim(); if (!pin) return;
+  $('btnPin').disabled = true;
+  try{
+    const r = await jsonp({action:'pin', pin});
+    if (r.ok){ S.pin = pin; S.nivel = 'piso'; S.custom = {}; $('modalPiso').classList.remove('show'); toast('Precio piso habilitado'); render(); }
+    else toast('Clave incorrecta');
+  }catch(e){ toast('Hace falta conexión para validar la clave'); }
+  $('btnPin').disabled = false; $('pinInput').value = '';
+};
+$('btnPedirAut').onclick = () => {
+  const c = calcular(); const w = DATA.config.whatsappAutoriza;
+  const txt = `Pido autorización de PRECIO PISO\nVendedor: ${$('vendedor').value}\nCliente: ${$('cliente').value || '-'} (${$('rubro').value || 'sin rubro'})\n` +
+    c.lineas.map(l => `- ${l.q} ${l.p.unidad} ${l.p.nombre}`).join('\n') + `\nA precio de lista: ${fmt(c.lista)}\nMotivo: `;
+  window.open((w ? `https://wa.me/${w}` : 'https://wa.me/') + '?text=' + encodeURIComponent(txt), '_blank');
+};
+
+/* ============ WHATSAPP AL CLIENTE ============ */
+function normTel(t){ let d = (t||'').replace(/\D/g,''); if (!d) return ''; d = d.replace(/^0/,''); if (!d.startsWith('54')) d = '549' + d; return d; }
+function textoPresupuesto(){
+  const c = calcular(); const cfg = DATA.config;
+  let t = `*Mariantonia Pastas Frescas*\nPresupuesto para ${$('cliente').value || 'vos'}\n\n`;
+  c.lineas.forEach(l => { t += `• ${l.q} × ${l.p.nombre} (${l.p.unidad.toLowerCase()}) a ${fmt(l.pu)} = ${fmt(l.q*l.pu)}\n`; });
+  if ($('regalo').checked) t += `• ${cfg.regaloMaxKg} kg de ñoquis de REGALO por ser tu primer pedido\n`;
+  if (c.desc > 0) t += `\nAhorro frente a precio de lista: ${fmt(c.desc)}`;
+  t += `\nEnvío: ${c.envio ? fmt(c.envio) : 'sin cargo'}`;
+  t += `\n*Total: ${fmt(c.total)}*\n`;
+  if ($('entrega').value) t += `\nEntrega: ${$('entrega').value}`;
+  t += `\nPago contado contra entrega (efectivo o transferencia).\nProducimos miércoles y sábados, siempre fresco. Duran una semana en heladera.\nPresupuesto válido por 7 días.\n\n${$('vendedor').value} · Mariantonia`;
+  return t;
+}
+$('btnWA').onclick = () => {
+  const tel = normTel($('telefono').value);
+  window.open((tel ? `https://wa.me/${tel}` : 'https://wa.me/') + '?text=' + encodeURIComponent(textoPresupuesto()), '_blank');
+};
+
+/* ============ GUARDAR (con cola sin conexión) ============ */
+$('btnGuardar').onclick = async () => {
+  if (!$('cliente').value.trim()){ toast('Falta el nombre del cliente'); $('cliente').focus(); return; }
+  const c = calcular();
+  if ((S.tipo === 'Cotización' || S.tipo === 'Pedido') && c.sub === 0){ toast('Cargá al menos un producto'); return; }
+  if (c.invalid){ toast('Hay precios por debajo del mínimo'); return; }
+  if (S.nivel === 'fijo' && !$('fijoOk').checked){ toast('Falta tildar el compromiso de cliente fijo'); return; }
+  const reg = {
+    vendedor: $('vendedor').value, tipo: S.tipo, cliente: $('cliente').value.trim(), rubro: $('rubro').value,
+    telefono: $('telefono').value.trim(), direccion: $('direccion').value.trim(), nivel: S.nivel === 'fijo' ? 'Cliente fijo' : S.nivel.charAt(0).toUpperCase() + S.nivel.slice(1),
+    detalle: c.lineas.map(l => `${l.q} ${l.p.nombre} x ${l.pu}`).join(' | '),
+    subtotalLista: c.lista, descuento: c.desc, envio: c.envio, total: c.total,
+    usaPiso: !!S.pin && c.usaPiso, pin: S.pin || '',
+    regalo: $('regalo').checked ? `${DATA.config.regaloMaxKg} kg ñoquis` : '' ,
+    entrega: $('entrega').value, notas: $('notas').value.trim() + ($('envioBonif').checked ? ' [envío bonificado]' : '')
+  };
+  $('btnGuardar').disabled = true;
+  try{
+    const r = await jsonp({action:'registrar', data: JSON.stringify(reg)});
+    if (!r.ok) throw new Error(r.error || 'error');
+    toast(S.tipo + ' guardado ✓');
+  }catch(e){
+    if (String(e.message).includes('PIN')){ toast('Clave de piso inválida'); $('btnGuardar').disabled = false; return; }
+    const q = lsGet('ma_pendientes', []); q.push(reg); lsSet('ma_pendientes', q);
+    toast('Sin conexión: quedó guardado en el teléfono');
+  }
+  $('btnGuardar').disabled = false; mostrarPendientes();
+};
+async function enviarPendientes(){
+  const q = lsGet('ma_pendientes', []); if (!q.length){ mostrarPendientes(); return; }
+  const resto = [];
+  for (const reg of q){ try{ const r = await jsonp({action:'registrar', data: JSON.stringify(reg)}); if (!r.ok && !String(r.error).includes('PIN')) resto.push(reg); }catch(e){ resto.push(reg); } }
+  lsSet('ma_pendientes', resto); mostrarPendientes();
+  if (q.length > resto.length) toast('Se enviaron ' + (q.length - resto.length) + ' registros pendientes');
+}
+function mostrarPendientes(){ const n = lsGet('ma_pendientes', []).length; $('pendientes').innerHTML = n ? `<span class="pend">${n} sin enviar</span>` : ''; }
+window.addEventListener('online', enviarPendientes);
+
+$('btnNuevo').onclick = () => {
+  S = {qty:{}, custom:{}, nivel:'lista', pin:null, tipo:'Cotización'};
+  ['cliente','telefono','direccion','notas'].forEach(id => $(id).value = '');
+  $('rubro').value = ''; ['fijoOk','envioBonif','regalo'].forEach(id => $(id).checked = false);
+  document.querySelectorAll('#tipos button').forEach((x,i) => x.classList.toggle('on', i === 0)); $('btnGuardar').textContent = 'Guardar cotización';
+  armarEntregas(); render(); window.scrollTo(0,0);
+};
+
+let tt; function toast(m){ const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2600); }
+
+cargar();
+</script>
+</body>
+</html>
